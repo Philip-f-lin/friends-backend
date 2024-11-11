@@ -6,3 +6,7 @@ import com.philip.friendsbackend.model.domain.User;
 public interface UserMapper extends BaseMapper<User> {
 
 }
+
+
+
+
