@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: user-center
+  # DataSource config
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver  # Updated driver class name
+    url: jdbc:mysql://localhost:3306/friends?serverTimezone=Asia/Taipei&characterEncoding=utf-8  # Added recommended properties
+    username: root
+    password: root  # Consider using environment variables or Spring Boot's encryption support for security
+server:
+  port: 8080
