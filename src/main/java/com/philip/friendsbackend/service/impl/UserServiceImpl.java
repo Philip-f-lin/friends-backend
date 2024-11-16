@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.philip.friendsbackend.mapper.UserMapper;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -14,11 +15,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService {
 
     @Resource
     private UserMapper userMapper;
+
+    // 鹽
+    private static final String SALT = "philip";
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -56,7 +61,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 2. 使用 MD5 哈希加密
-        final String SALT = "philip";
         StringBuilder hashedPassword = new StringBuilder();
         DigestUtils.appendMd5DigestAsHex((SALT + userPassword).getBytes(), hashedPassword);
 
@@ -70,6 +74,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         return user.getId();
+    }
+
+    @Override
+    public User userLogin(String userAccount, String userPassword) {
+        // 檢驗輸入的帳號密碼
+        if(StringUtils.isAnyBlank(userAccount, userPassword)){
+            return null;
+        }
+
+        if(userAccount.length() < 8){
+            return null;
+        }
+
+        if(userPassword.length() < 8){
+            return null;
+        }
+
+        // 帳號不能包含特殊符號
+        String validPattern = "[^a-zA-Z0-9]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if(matcher.find()){
+            return null;
+        }
+
+        // 使用 MD5 哈希加密
+        StringBuilder hashedPassword = new StringBuilder();
+        DigestUtils.appendMd5DigestAsHex((SALT + userPassword).getBytes(), hashedPassword);
+
+        // 判斷使用者是否存在
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_account", userAccount);
+        queryWrapper.eq("user_password", hashedPassword);
+        User user = userMapper.selectOne(queryWrapper);
+        // 使用者不存在
+        if (user == null){
+            log.info("Login failed: the user account or password is incorrect.");
+            return null;
+        }
+        return user;
     }
 }
 
