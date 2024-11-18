@@ -9,3 +9,9 @@ spring:
     password: root  # Consider using environment variables or Spring Boot's encryption support for security
 server:
   port: 8080
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDelete # 全域邏輯刪除欄位名
+      logic-delete-value: 1 # 邏輯已刪除值
+      logic-not-delete-value: 0 # 邏輯未刪除值
