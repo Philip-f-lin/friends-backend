@@ -58,13 +58,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(count > 0){
             return -1;
         }
-        // 2. 使用 MD5 哈希加密
-        StringBuilder hashedPassword = new StringBuilder();
-        DigestUtils.appendMd5DigestAsHex((SALT + userPassword).getBytes(), hashedPassword);
+        // 2. 使用 MD5 加密
+        String hashedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 3. 創建 user 物件，並存入數據
         User user = new User();
         user.setUserAccount(userAccount);
-        user.setUserPassword(hashedPassword.toString());
+        user.setUserPassword(hashedPassword);
         boolean saveResult = this.save(user);
         if(!saveResult){
             return -1;
@@ -90,9 +89,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(matcher.find()){
             return null;
         }
-        // 使用 MD5 哈希加密
-        StringBuilder hashedPassword = new StringBuilder();
-        DigestUtils.appendMd5DigestAsHex((SALT + userPassword).getBytes(), hashedPassword);
+        // 使用 MD5 加密
+        String hashedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 判斷使用者是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
@@ -104,23 +102,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return null;
         }
         // 去除使用者敏感資訊
-        User safetyUser = getsafetyUser();
+        User safetyUser = getsafetyUser(user);
         // 記錄使用者登入狀態(session)
         request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
         return safetyUser;
     }
 
-    private static User getsafetyUser() {
+    private static User getsafetyUser(User user) {
         User safetyUser = new User();
-        safetyUser.setId(safetyUser.getId());
-        safetyUser.setUsername(safetyUser.getUsername());
-        safetyUser.setUserAccount(safetyUser.getUserAccount());
-        safetyUser.setAvatarUrl(safetyUser.getAvatarUrl());
-        safetyUser.setGender(safetyUser.getGender());
-        safetyUser.setPhone(safetyUser.getPhone());
-        safetyUser.setEmail(safetyUser.getEmail());
-        safetyUser.setUserStatus(safetyUser.getUserStatus());
-        safetyUser.setCreateTime(safetyUser.getCreateTime());
+        safetyUser.setId(user.getId());
+        safetyUser.setUsername(user.getUsername());
+        safetyUser.setUserAccount(user.getUserAccount());
+        safetyUser.setAvatarUrl(user.getAvatarUrl());
+        safetyUser.setGender(user.getGender());
+        safetyUser.setPhone(user.getPhone());
+        safetyUser.setEmail(user.getEmail());
+        safetyUser.setUserStatus(user.getUserStatus());
+        safetyUser.setCreateTime(user.getCreateTime());
         return safetyUser;
     }
 }
