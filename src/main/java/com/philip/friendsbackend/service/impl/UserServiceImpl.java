@@ -108,7 +108,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return safetyUser;
     }
 
-    private static User getsafetyUser(User user) {
+    /**
+     * 去除使用者敏感資訊
+     * @param user
+     * @return
+     */
+    @Override
+    public User getsafetyUser(User user) {
         User safetyUser = new User();
         safetyUser.setId(user.getId());
         safetyUser.setUsername(user.getUsername());

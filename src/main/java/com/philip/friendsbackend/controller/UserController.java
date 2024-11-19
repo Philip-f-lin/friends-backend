@@ -1,17 +1,17 @@
 package com.philip.friendsbackend.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.request.UserLoginRequest;
 import com.philip.friendsbackend.model.request.UserRegisterRequest;
 import com.philip.friendsbackend.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author philip
@@ -48,5 +48,25 @@ public class UserController {
             return null;
         }
         return userService.userLogin(userAccount, userPassword, request);
+    }
+
+    @GetMapping("/search")
+    public List<User> searchUsers(String username){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        if(StringUtils.isNotBlank(username)){
+            queryWrapper.like("username", username);
+        }
+        List<User> userList = userService.list(queryWrapper);
+        return userList.stream()
+                .map(user -> userService.getsafetyUser(user))
+                .collect(Collectors.toList());
+    }
+
+    @DeleteMapping("/delete")
+    public boolean deleteUser(@RequestBody long id){
+        if (id <= 0){
+            return false;
+        }
+        return userService.removeById(id);
     }
 }

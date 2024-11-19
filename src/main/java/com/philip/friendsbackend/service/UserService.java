@@ -28,4 +28,11 @@ public interface UserService extends IService<User> {
      * @return 去除敏感訊息後使用者訊息
      */
     User userLogin(String userAccount, String userPassword, HttpServletRequest request);
+
+    /**
+     * 去除使用者敏感資訊
+     * @param user
+     * @return
+     */
+    User getsafetyUser(User user);
 }
