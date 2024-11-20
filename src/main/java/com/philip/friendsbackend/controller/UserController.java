@@ -5,6 +5,7 @@ import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.request.UserLoginRequest;
 import com.philip.friendsbackend.model.request.UserRegisterRequest;
 import com.philip.friendsbackend.service.UserService;
+import com.philip.friendsbackend.utils.UserHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,17 @@ public class UserController {
             return null;
         }
         return userService.userLogin(userAccount, userPassword, request);
+    }
+
+    @GetMapping("/current")
+    public User getCurrentUser(){
+        // 如果使用者資訊有變化，使用 UserHolder.getUser() 會拿到舊的資訊
+        User currentUser = UserHolder.getUser();
+        long userId = currentUser.getId();
+        // 因此在查詢一次資料庫拿到最新使用者資訊
+        User user = userService.getById(userId);
+        // 去除使用者敏感資訊
+        return userService.getsafetyUser(user);
     }
 
     @GetMapping("/search")

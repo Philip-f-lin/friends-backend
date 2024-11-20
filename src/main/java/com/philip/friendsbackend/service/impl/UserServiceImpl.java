@@ -27,7 +27,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private static final String SALT = "philip";
 
     // 使用者登入狀態(session)
-    private static final String USER_LOGIN_STATE = "userLoginSate";
+    public static final String USER_LOGIN_STATE = "userLoginSate";
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -115,6 +115,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public User getsafetyUser(User user) {
+        if (user == null){
+            return null;
+        }
         User safetyUser = new User();
         safetyUser.setId(user.getId());
         safetyUser.setUsername(user.getUsername());
