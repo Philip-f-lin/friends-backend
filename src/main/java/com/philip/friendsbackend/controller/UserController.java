@@ -51,6 +51,14 @@ public class UserController {
         return userService.userLogin(userAccount, userPassword, request);
     }
 
+    @PostMapping("/logout")
+    public Integer userLogout(HttpServletRequest request){
+        if (request == null) {
+            return null;
+        }
+       return userService.userLogout(request);
+    }
+
     @GetMapping("/current")
     public User getCurrentUser(){
         // 如果使用者資訊有變化，使用 UserHolder.getUser() 會拿到舊的資訊
