@@ -2,6 +2,8 @@ package com.philip.friendsbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.philip.friendsbackend.common.ErrorCode;
+import com.philip.friendsbackend.exception.BusinessException;
 import com.philip.friendsbackend.mapper.UserMapper;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.service.UserService;
@@ -33,30 +35,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         // 1. 檢驗輸入的帳號密碼
         if(StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "輸入的帳號密碼為空白");
         }
         if(userAccount.length() < 8){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者帳號需大於等於 8 位");
         }
         if(userPassword.length() < 8 || checkPassword.length() < 8){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者密碼需大於等於 8 位");
         }
         // 帳號不能包含特殊符號
         String validPattern = "[^a-zA-Z0-9]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if(matcher.find()){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "帳號不能包含特殊符號");
         }
         // 密碼與驗證密碼不相同
         if(!userPassword.equals(checkPassword)){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密碼與驗證密碼不相同");
         }
         // 帳號不能重複
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
         long count = userMapper.selectCount(queryWrapper);
         if(count > 0){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "帳號不能重複");
         }
         // 2. 使用 MD5 加密
         String hashedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -66,7 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(hashedPassword);
         boolean saveResult = this.save(user);
         if(!saveResult){
-            return -1;
+            throw new BusinessException(ErrorCode.SAVE_ERROR, "使用者資料保存時出現未知錯誤");
         }
         return user.getId();
     }
