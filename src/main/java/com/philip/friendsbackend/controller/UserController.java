@@ -2,6 +2,8 @@ package com.philip.friendsbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.philip.friendsbackend.common.BaseResponse;
+import com.philip.friendsbackend.common.ErrorCode;
+import com.philip.friendsbackend.exception.BusinessException;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.request.UserLoginRequest;
 import com.philip.friendsbackend.model.request.UserRegisterRequest;
@@ -29,7 +31,7 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest){
         if (userRegisterRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
