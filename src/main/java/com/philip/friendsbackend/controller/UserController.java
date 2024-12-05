@@ -94,7 +94,7 @@ public class UserController {
     @DeleteMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id){
         if (id <= 0){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         boolean result = userService.removeById(id);
         return ResultUtils.success(result);
