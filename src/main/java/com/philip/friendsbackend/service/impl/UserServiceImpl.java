@@ -77,7 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 檢驗輸入的帳號密碼
         if(StringUtils.isAnyBlank(userAccount, userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "輸入的帳號密碼為空白");
         }
         if(userAccount.length() < 8){
             return null;
