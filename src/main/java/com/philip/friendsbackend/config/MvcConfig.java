@@ -13,7 +13,8 @@ public class MvcConfig implements WebMvcConfigurer {
         // 登入攔截器
         registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
-                        "/user/login"
+                        "/user/login",
+                        "/user/register"
                 );
     }
 }
