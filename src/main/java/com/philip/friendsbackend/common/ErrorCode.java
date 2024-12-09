@@ -11,7 +11,8 @@ public enum ErrorCode {
     NULL_ERROR(40001, "請求資料為 null", ""),
     NOT_LOGIN(40100, "尚未登入", ""),
     NO_AUTH(40101, "沒有權限", ""),
-    SAVE_ERROR(50001, "保存失敗", "");
+    SAVE_ERROR(50001, "保存失敗", ""),
+    SYSTEM_ERROR(50002, "系統異常","");
 
 
     /**
