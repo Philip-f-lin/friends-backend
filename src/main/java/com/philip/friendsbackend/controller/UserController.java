@@ -74,7 +74,7 @@ public class UserController {
         // 因此在查詢一次資料庫拿到最新使用者資訊
         User user = userService.getById(userId);
         // 去除使用者敏感資訊
-        User safetyUser = userService.getsafetyUser(user);
+        User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
     }
 
@@ -86,7 +86,7 @@ public class UserController {
         }
         List<User> userList = userService.list(queryWrapper);
         List<User> list = userList.stream()
-                .map(user -> userService.getsafetyUser(user))
+                .map(user -> userService.getSafetyUser(user))
                 .collect(Collectors.toList());
         return ResultUtils.success(list);
     }
