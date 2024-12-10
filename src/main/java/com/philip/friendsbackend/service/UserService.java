@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.philip.friendsbackend.model.domain.User;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author philip
@@ -34,11 +35,19 @@ public interface UserService extends IService<User> {
      * @param user
      * @return
      */
-    User getsafetyUser(User user);
+    User getSafetyUser(User user);
 
     /**
      * 使用者登出
      * @param request
      */
     int userLogout(HttpServletRequest request);
+
+    /**
+     * 根據標籤搜索使用者
+     *
+     * @param tagNameList 使用者擁有的標籤
+     * @return
+     */
+    List<User> searchUsersByTags(List<String> tagNameList);
 }
