@@ -1,7 +1,7 @@
 package com.philip.friendsbackend.utils;
 
 import com.philip.friendsbackend.common.BaseResponse;
-－import com.philip.friendsbackend.common.ErrorCode;
+import com.philip.friendsbackend.common.ErrorCode;
 
 /**
  * 用於封裝統一 API 返回結果的工具類。
@@ -28,6 +28,28 @@ public class ResultUtils {
      */
     public static BaseResponse error(ErrorCode errorCode){
         return new BaseResponse<>(errorCode);
+    }
+
+    /**
+     *
+     * @param errorCode
+     * @param message
+     * @param description
+     * @return
+     */
+    public static BaseResponse error(int errorCode, String message, String description){
+        return new BaseResponse<>(errorCode, null, message, description);
+    }
+
+    /**
+     * 失敗
+     * @param errorCode
+     * @param message
+     * @param description
+     * @return
+     */
+    public static BaseResponse error(ErrorCode errorCode, String message, String description){
+        return new BaseResponse<>(errorCode.getCode(), null, message, description);
     }
 
 }
