@@ -1,6 +1,6 @@
 spring:
   application:
-    name: user-center
+    name: friends
   # DataSource config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver  # Updated driver class name
@@ -10,8 +10,13 @@ spring:
   # session 失效時間
   session:
     timeout: 86400
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
 server:
   port: 8080
+  servlet:
+    context-path: /api
 mybatis-plus:
   global-config:
     db-config:
