@@ -1,6 +1,7 @@
 package com.philip.friendsbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.philip.friendsbackend.common.BaseResponse;
 import com.philip.friendsbackend.common.ErrorCode;
 import com.philip.friendsbackend.exception.BusinessException;
@@ -11,10 +12,12 @@ import com.philip.friendsbackend.service.UserService;
 import com.philip.friendsbackend.utils.ResultUtils;
 import com.philip.friendsbackend.utils.UserHolder;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,6 +92,15 @@ public class UserController {
                 .map(user -> userService.getSafetyUser(user))
                 .collect(Collectors.toList());
         return ResultUtils.success(list);
+    }
+
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> searchUsersByTags(@RequestParam(required = false) List<String> tagNameList){
+        if (CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        List<User> userList = userService.searchUsersByTags(tagNameList);
+        return ResultUtils.success(userList);
     }
 
     @DeleteMapping("/delete")
