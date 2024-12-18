@@ -1,7 +1,6 @@
 package com.philip.friendsbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.philip.friendsbackend.common.BaseResponse;
 import com.philip.friendsbackend.common.ErrorCode;
 import com.philip.friendsbackend.exception.BusinessException;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = {"http://localhost:5173"})
 public class UserController {
 
     @Resource
@@ -104,7 +103,7 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Integer> updateUser(User user, HttpServletRequest request){
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request){
         if (user == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
