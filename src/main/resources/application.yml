@@ -23,6 +23,9 @@ server:
   port: 8080
   servlet:
     context-path: /api
+    session:
+      cookie:
+        domain: localhost
 mybatis-plus:
   global-config:
     db-config:
