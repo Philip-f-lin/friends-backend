@@ -9,7 +9,6 @@ import com.philip.friendsbackend.model.request.UserLoginRequest;
 import com.philip.friendsbackend.model.request.UserRegisterRequest;
 import com.philip.friendsbackend.service.UserService;
 import com.philip.friendsbackend.utils.ResultUtils;
-import com.philip.friendsbackend.utils.UserHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +17,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.philip.friendsbackend.service.impl.UserServiceImpl.USER_LOGIN_STATE;
 
 /**
  * @author philip
@@ -68,13 +69,15 @@ public class UserController {
     }
 
     @GetMapping("/current")
-    public BaseResponse<User> getCurrentUser(){
-        // 如果使用者資訊有變化，使用 UserHolder.getUser() 會拿到舊的資訊
-        User currentUser = UserHolder.getUser();
-        long userId = currentUser.getId();
-        // 因此在查詢一次資料庫拿到最新使用者資訊
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request){
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User)userObj;
+        if(currentUser == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        // 如果使用者狀態有改變的話，再查一次資料庫獲取最新資訊，這個做法比較好，不要直接用session的，如果使用者狀態有變，使用者再次登錄狀態會是之前的狀態
+        Long userId = currentUser.getId();
         User user = userService.getById(userId);
-        // 去除使用者敏感資訊
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
     }
