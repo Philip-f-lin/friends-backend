@@ -178,6 +178,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }).map(this::getSafetyUser).collect(Collectors.toList());
     }
 
+    @Override
+    public int updateUser(User user, User loginUser) {
+        long userId = user.getId();
+        if (userId <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 只允許更改自己的使用者資訊
+        if (userId != loginUser.getId()){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        return userMapper.updateById(user);
+    }
+
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        if (request == null){
+            return null;
+        }
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (userObj == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        return (User) userObj;
+    }
+
     /**
      * 使用者登出
      * @param request
