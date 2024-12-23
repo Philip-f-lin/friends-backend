@@ -27,6 +27,8 @@ server:
       cookie:
         domain: localhost
 mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       logic-delete-field: isDelete # 全域邏輯刪除欄位名
