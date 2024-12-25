@@ -1,6 +1,7 @@
 package com.philip.friendsbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -11,6 +12,8 @@ import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -21,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,6 +36,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     // 鹽
     private static final String SALT = "philip";
@@ -205,6 +212,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         return (User) userObj;
+    }
+
+    @Override
+    public Page<User> getRecommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
+        User loginUser = this.getLoginUser(request);
+        String redisKey = String.format("philip:user:recommend:%s", loginUser.getId());
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        // 如果有緩存，直接讀緩存
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+        if(userPage != null){
+            return userPage;
+        }
+        // 無緩存，查資料庫
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("id", loginUser.getId()); // 排除自己
+        queryWrapper.orderByDesc("create_time"); // 根據建立時間降序排序
+        userPage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
+        // 為什麼用try catch，因為即使失敗，還是可以把資料庫的資料返還給前端
+        // 在這邊捕獲異常，而不是交給全局異常處理器去拋
+        // 寫緩存
+        try {
+            valueOperations.set(redisKey, userPage, 30000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("redis set key error", e);
+        }
+        return userPage;
     }
 
     /**

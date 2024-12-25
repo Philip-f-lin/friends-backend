@@ -108,9 +108,8 @@ public class UserController {
 
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request){
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
-        return ResultUtils.success(userList);
+        Page<User> recommendUsers = userService.getRecommendUsers(pageSize, pageNum, request);
+        return ResultUtils.success(recommendUsers);
     }
 
     @PostMapping("/update")

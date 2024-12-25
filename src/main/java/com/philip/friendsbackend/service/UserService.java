@@ -1,5 +1,6 @@
 package com.philip.friendsbackend.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.philip.friendsbackend.model.domain.User;
 
@@ -63,4 +64,6 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getLoginUser(HttpServletRequest request);
+
+    Page<User> getRecommendUsers(long pageSize, long pageNum, HttpServletRequest request);
 }
