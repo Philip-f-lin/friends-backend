@@ -16,3 +16,30 @@ create table user
     tags         varchar(1024)                       null comment '標籤 Json 列表'
 )
     comment '使用者';
+
+create table team
+(
+    id          bigint auto_increment comment 'id' primary key,
+    name        varchar(256)                       not null comment '隊伍名稱',
+    description varchar(1024)                      null comment '簡介',
+    max_num      int      default 1                 not null comment '最大人數',
+    user_id      bigint                             null comment '使用者 id ( 同時為隊伍隊長 id )',
+    status      int      default 0                 not null comment '0 - 公開，1 - 非公開，2 - 加密',
+    password    varchar(512)                       null comment '密碼',
+    create_time  datetime default CURRENT_TIMESTAMP null comment '創建時間',
+    update_time  datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    is_delete    tinyint  default 0                 not null comment '是否刪除'
+)
+    comment '隊伍';
+
+create table user_team
+(
+    id         bigint auto_increment comment 'id' primary key,
+    user_id     bigint comment '使用者 id',
+    team_id     bigint comment '隊伍 id',
+    join_time   datetime                           null comment '加入時間',
+    create_time datetime default CURRENT_TIMESTAMP null comment '創建時間',
+    update_time datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    is_delete   tinyint  default 0                 not null comment '是否刪除'
+)
+    comment '使用者隊伍關係表';
