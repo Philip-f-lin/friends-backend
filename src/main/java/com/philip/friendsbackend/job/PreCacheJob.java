@@ -47,9 +47,7 @@ public class PreCacheJob {
         RLock lock = redissonClient.getLock("philip:precachejob:docache:lock");
         try {
             // 只有一個線程能獲取到鎖
-            if (lock.tryLock(0, TimeUnit.MILLISECONDS)) {
-                // 測試 WatchDog
-                Thread.sleep(60000L);
+            if (lock.tryLock(0, 30000L, TimeUnit.MILLISECONDS)) {
                 // 僅提供活躍使用者緩存預熱（因為記憶體有限）
                 // 查詢最近活躍的使用者列表
                 QueryWrapper<User> queryWrapper = new QueryWrapper<>();
