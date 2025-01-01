@@ -9,6 +9,7 @@ import com.philip.friendsbackend.model.domain.Team;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.dto.TeamQuery;
 import com.philip.friendsbackend.model.request.TeamAddRequest;
+import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.service.TeamService;
 import com.philip.friendsbackend.service.UserService;
 import com.philip.friendsbackend.utils.ResultUtils;
@@ -79,14 +80,11 @@ public class TeamController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery){
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery){
         if (teamQuery == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Team team = new Team();
-        BeanUtils.copyProperties(teamQuery, team);
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(queryWrapper);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQuery);
         return ResultUtils.success(teamList);
     }
 
