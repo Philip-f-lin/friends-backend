@@ -6,13 +6,17 @@ import com.philip.friendsbackend.common.BaseResponse;
 import com.philip.friendsbackend.common.ErrorCode;
 import com.philip.friendsbackend.exception.BusinessException;
 import com.philip.friendsbackend.model.domain.Team;
+import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.dto.TeamQuery;
+import com.philip.friendsbackend.model.request.TeamAddRequest;
 import com.philip.friendsbackend.service.TeamService;
+import com.philip.friendsbackend.service.UserService;
 import com.philip.friendsbackend.utils.ResultUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -23,16 +27,19 @@ public class TeamController {
     @Resource
     private TeamService teamService;
 
+    @Resource
+    private UserService userService;
+
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team){
-        if (team == null){
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request){
+        if (teamAddRequest == null){
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
-        boolean save = teamService.save(team);
-        if (!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "新增失敗");
-        }
-        return ResultUtils.success(team.getId());
+        User loginUser = userService.getLoginUser(request);
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest, team);
+        long teamId = teamService.addTeam(team, loginUser);
+        return ResultUtils.success(teamId);
     }
 
     @DeleteMapping("/delete")
