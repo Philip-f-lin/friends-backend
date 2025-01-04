@@ -11,6 +11,7 @@ import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.domain.UserTeam;
 import com.philip.friendsbackend.model.dto.TeamQuery;
 import com.philip.friendsbackend.model.enums.TeamStatusEnum;
+import com.philip.friendsbackend.model.request.TeamJoinRequest;
 import com.philip.friendsbackend.model.request.TeamUpdateRequest;
 import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.model.vo.UserVO;
@@ -86,7 +87,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             }
         }
         // 使用分布式鎖，避免重複建立多個隊伍
-        RLock lock = redissonClient.getLock("philip:teamserviceimpl:addteam:lock" + userId);
+        RLock lock = redissonClient.getLock("philip:add_team");
         try {
             if (lock.tryLock(0, 30000L, TimeUnit.MILLISECONDS)) {
                 QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
@@ -222,6 +223,99 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         Team updateTeam = new Team();
         BeanUtils.copyProperties(teamUpdateRequest, updateTeam);
         return this.updateById(updateTeam);
+    }
+
+    @Override
+    public boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser) {
+        if (teamJoinRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long teamId = teamJoinRequest.getTeamId();
+        Team team = getTeamById(teamId);
+        Integer status = team.getStatus();
+        TeamStatusEnum teamStatusEnum = TeamStatusEnum.getEnumByValue(status);
+        if (TeamStatusEnum.PRIVATE.equals(teamStatusEnum)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "禁止加入私人隊伍");
+        }
+        String password = teamJoinRequest.getPassword();
+        if (TeamStatusEnum.SECRET.equals(teamStatusEnum)) {
+            if (StringUtils.isBlank(password) || !password.equals(team.getPassword())) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "密碼錯誤");
+            }
+        }
+        // 使用者已加入的隊伍數量
+        Long userId = loginUser.getId();
+        // 使用分布式鎖，避免使用者重複加入相同隊伍
+        RLock lock = redissonClient.getLock("philip:join_team");
+        try {
+            // 搶到鎖並執行
+            while (true) {
+                if (lock.tryLock(0, 30000L, TimeUnit.MILLISECONDS)) {
+                    System.out.println("getLock: " + Thread.currentThread().getId());
+                    QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+                    userTeamQueryWrapper.eq("userId", userId);
+                    long hasJoinNum = userTeamService.count(userTeamQueryWrapper);
+                    if (hasJoinNum > 5) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "最多創建和加入 5 個隊伍");
+                    }
+                    // 不能重複加入已加入的隊伍
+                    userTeamQueryWrapper = new QueryWrapper<>();
+                    userTeamQueryWrapper.eq("userId", userId);
+                    userTeamQueryWrapper.eq("teamId", teamId);
+                    long hasUserJoinTeam = userTeamService.count(userTeamQueryWrapper);
+                    if (hasUserJoinTeam > 0) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者已加入該隊伍");
+                    }
+                    // 已加入隊伍的人數
+                    long teamHasJoinNum = this.getTeamUserByTeamId(teamId);
+                    if (teamHasJoinNum >= team.getMaxNum()) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "隊伍已滿");
+                    }
+                    // 修改隊伍資訊
+                    UserTeam userTeam = new UserTeam();
+                    userTeam.setUserId(userId);
+                    userTeam.setTeamId(teamId);
+                    userTeam.setJoinTime(new Date());
+                    return userTeamService.save(userTeam);
+                }
+            }
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "獲取分布式鎖失敗");
+        } finally {
+            // 確保只有當前線程持有鎖時才解鎖
+            if (lock.isHeldByCurrentThread()) {
+                System.out.println("unlock: " + Thread.currentThread().getId());
+                lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * 根據 id 獲取隊伍訊息
+     *
+     * @param teamId
+     * @return
+     */
+    private Team getTeamById(Long teamId) {
+        if (teamId == null || teamId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = this.getById(teamId);
+        if (team == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "隊伍不存在");
+        }
+        return team;
+    }
+
+    /**
+     * 獲取隊伍的人數數量
+     *
+     * @return
+     */
+    private long getTeamUserByTeamId(long teamId) {
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        userTeamQueryWrapper.eq("teamId", teamId);
+        return userTeamService.count(userTeamQueryWrapper);
     }
 }
 

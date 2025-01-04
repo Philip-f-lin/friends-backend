@@ -9,6 +9,7 @@ import com.philip.friendsbackend.model.domain.Team;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.dto.TeamQuery;
 import com.philip.friendsbackend.model.request.TeamAddRequest;
+import com.philip.friendsbackend.model.request.TeamJoinRequest;
 import com.philip.friendsbackend.model.request.TeamUpdateRequest;
 import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.service.TeamService;
@@ -101,5 +102,15 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
         Page<Team> resultPage = teamService.page(page, queryWrapper);
         return ResultUtils.success(resultPage);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request){
+        if (teamJoinRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        return ResultUtils.success(result);
     }
 }
