@@ -12,6 +12,7 @@ import com.philip.friendsbackend.model.domain.UserTeam;
 import com.philip.friendsbackend.model.dto.TeamQuery;
 import com.philip.friendsbackend.model.enums.TeamStatusEnum;
 import com.philip.friendsbackend.model.request.TeamJoinRequest;
+import com.philip.friendsbackend.model.request.TeamQuitRequest;
 import com.philip.friendsbackend.model.request.TeamUpdateRequest;
 import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.model.vo.UserVO;
@@ -290,6 +291,60 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean quitTeam(TeamQuitRequest teamQuitRequest, User loginUser) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long teamId = teamQuitRequest.getTeamId();
+        if (teamId == null || teamId <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = getTeamById(teamId);
+        Long userId = loginUser.getId();
+        UserTeam queryUserTeam = new UserTeam();
+        queryUserTeam.setUserId(userId);
+        queryUserTeam.setTeamId(teamId);
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>(queryUserTeam);
+        long count = userTeamService.count(queryWrapper);
+        if (count == 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "未加入隊伍");
+        }
+        long teamHasJoinNum = this.getTeamUserByTeamId(teamId);
+        // 隊伍只剩一人，解散
+        if (teamHasJoinNum == 1) {
+            // 刪除隊伍
+            this.removeById(teamId);
+        } else {
+            // 隊伍至少還剩 2 人
+            // 是隊長
+            if (team.getUserId().equals(userId)) {
+                // 把隊伍移轉給最早加入的使用者
+                // 1. 查詢已加入隊伍的所有使用者和加入時間
+                QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+                userTeamQueryWrapper.eq("teamId", teamId);
+                userTeamQueryWrapper.last("order by id asc limit 2");
+                List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+                if (CollectionUtils.isEmpty(userTeamList) || userTeamList.size() <= 1) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+                }
+                UserTeam nextUserTeam = userTeamList.get(1);
+                Long nextTeamLeaderId = nextUserTeam.getUserId();
+                // 更新隊伍的隊長
+                Team updateTeam = new Team();
+                updateTeam.setId(teamId);
+                updateTeam.setUserId(nextTeamLeaderId);
+                boolean result = this.updateById(updateTeam);
+                if (!result) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新隊伍隊長失敗");
+                }
+            }
+        }
+        // 刪除隊長與隊伍之間的關係
+        return userTeamService.remove(queryWrapper);
+    }
+
     /**
      * 根據 id 獲取隊伍訊息
      *
@@ -309,7 +364,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     /**
      * 獲取隊伍的人數數量
-     *
+     * @param teamId
      * @return
      */
     private long getTeamUserByTeamId(long teamId) {

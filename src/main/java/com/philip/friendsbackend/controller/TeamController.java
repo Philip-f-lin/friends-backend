@@ -10,6 +10,7 @@ import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.dto.TeamQuery;
 import com.philip.friendsbackend.model.request.TeamAddRequest;
 import com.philip.friendsbackend.model.request.TeamJoinRequest;
+import com.philip.friendsbackend.model.request.TeamQuitRequest;
 import com.philip.friendsbackend.model.request.TeamUpdateRequest;
 import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.service.TeamService;
@@ -111,6 +112,16 @@ public class TeamController {
         }
         User loginUser = userService.getLoginUser(request);
         boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        return ResultUtils.success(result);
+    }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest, HttpServletRequest request){
+        if (teamQuitRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Boolean result = teamService.quitTeam(teamQuitRequest, loginUser);
         return ResultUtils.success(result);
     }
 }
