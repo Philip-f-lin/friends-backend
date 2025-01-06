@@ -26,7 +26,6 @@ import static com.philip.friendsbackend.service.impl.UserServiceImpl.USER_LOGIN_
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserController {
 
     @Resource
