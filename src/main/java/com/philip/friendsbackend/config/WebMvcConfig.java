@@ -1,24 +1,45 @@
 package com.philip.friendsbackend.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
-      public class WebMvcConfig implements WebMvcConfigurer {
+import java.util.Arrays;
 
-          @Override
-          public void addCorsMappings(CorsRegistry registry) {
-              //設定允許跨域的路徑
-              registry.addMapping("/**")
-                      //設定允許跨域請求的域名
-                      //當**Credentials為true時，**來源不能為星號，需為具體的ip位址【若介面不帶cookie,ip則需設定成具體ip】
-                      .allowedOrigins("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:9527", "http://127.0.0.1:8082", "http://127.0.0.1:8083")
-                      // 是否允許憑證不再預設開啟
-                      .allowCredentials(true)
-                      //設定允許的方法
-                      .allowedMethods("*")
-                      //跨域允許時間
-                      .maxAge(3600);
-          }
-      }
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    // 當前跨域請求最大有效時長。這裡預設1天
+    private static final long MAX_AGE = 24 * 60 * 60;
+
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+
+        // 1. 設置允許的來源，列出具體的前端地址
+        corsConfiguration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173"
+        ));
+
+        // 2. 設置允許的請求頭
+        corsConfiguration.addAllowedHeader("*");
+
+        // 3. 設置允許的請求方法
+        corsConfiguration.addAllowedMethod("*");
+
+        // 4. 允許攜帶憑證（如 Cookie）
+        corsConfiguration.setAllowCredentials(true);
+
+        // 5. 設置預檢請求的緩存時間
+        corsConfiguration.setMaxAge(3600L);
+
+        // 6. 註冊 CORS 配置
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return new CorsFilter(source);
+    }
+}
