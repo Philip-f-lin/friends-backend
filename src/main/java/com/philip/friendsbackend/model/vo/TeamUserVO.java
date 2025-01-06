@@ -41,7 +41,7 @@ public class TeamUserVO implements Serializable {
     private Long userId;
 
     /**
-     * 0 - 公開，1 - 非公開，2 - 加密
+     * 0 - 公開，1 - 加密(私人)
      */
     private Integer status;
 

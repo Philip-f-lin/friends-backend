@@ -24,7 +24,7 @@ create table team
     description varchar(1024)                      null comment '簡介',
     max_num      int      default 1                 not null comment '最大人數',
     user_id      bigint                             null comment '使用者 id ( 同時為隊伍隊長 id )',
-    status      int      default 0                 not null comment '0 - 公開，1 - 非公開，2 - 加密',
+    status      int      default 0                 not null comment '0 - 公開，1 - 加密(私人)',
     password    varchar(512)                       null comment '密碼',
     create_time  datetime default CURRENT_TIMESTAMP null comment '創建時間',
     update_time  datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
