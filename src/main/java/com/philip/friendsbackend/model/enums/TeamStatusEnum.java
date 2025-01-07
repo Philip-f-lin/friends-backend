@@ -6,8 +6,7 @@ package com.philip.friendsbackend.model.enums;
 public enum TeamStatusEnum {
 
     PUBLIC(0, "公開"),
-    PRIVATE(1, "未公開"),
-    SECRET(2, "加密");
+    SECRET(1, "私人");
 
     public static TeamStatusEnum getEnumByValue(Integer value){
         if (value == null){
