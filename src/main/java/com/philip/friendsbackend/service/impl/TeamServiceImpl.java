@@ -235,11 +235,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         Team team = getTeamById(teamId);
         Integer status = team.getStatus();
         TeamStatusEnum teamStatusEnum = TeamStatusEnum.getEnumByValue(status);
-        if (TeamStatusEnum.PRIVATE.equals(teamStatusEnum)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "禁止加入私人隊伍");
-        }
-        String password = teamJoinRequest.getPassword();
         if (TeamStatusEnum.SECRET.equals(teamStatusEnum)) {
+            String password = teamJoinRequest.getPassword();
             if (StringUtils.isBlank(password) || !password.equals(team.getPassword())) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "密碼錯誤");
             }
@@ -343,6 +340,27 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         // 刪除隊長與隊伍之間的關係
         return userTeamService.remove(queryWrapper);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteTeam(long id, User loginUser) {
+        Team team = getTeamById(id);
+        // 檢查隊伍是否存在
+        long teamId = team.getId();
+        // 檢查是不是隊伍的隊長
+        if (!team.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "沒有訪問權限");
+        }
+        // 刪除所有加入隊伍的相關訊息
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        userTeamQueryWrapper.eq("teamId", teamId);
+        boolean result = userTeamService.remove(userTeamQueryWrapper);
+        if (!result) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "刪除隊伍相關訊息失敗");
+        }
+        // 刪除隊伍
+        return this.removeById(teamId);
     }
 
     /**
