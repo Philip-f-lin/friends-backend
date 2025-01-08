@@ -125,4 +125,23 @@ public class TeamController {
         }
         return ResultUtils.success(true);
     }
+
+    /**
+     * 取得我創建的隊伍
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/my/create")
+    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery, HttpServletRequest request){
+        if(teamQuery == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        teamQuery.setUserId(loginUser.getId());
+        List<TeamUserVO> teamList = teamService.listTeams(teamQuery);
+        return ResultUtils.success(teamList);
+    }
+
+
 }
