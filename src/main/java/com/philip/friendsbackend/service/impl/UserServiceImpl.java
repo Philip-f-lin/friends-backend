@@ -9,9 +9,14 @@ import com.philip.friendsbackend.common.ErrorCode;
 import com.philip.friendsbackend.exception.BusinessException;
 import com.philip.friendsbackend.mapper.UserMapper;
 import com.philip.friendsbackend.model.domain.User;
+import com.philip.friendsbackend.model.vo.UserVO;
 import com.philip.friendsbackend.service.UserService;
+import com.philip.friendsbackend.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import org.apache.commons.math3.util.Pair;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
@@ -20,10 +25,8 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.lang.reflect.Type;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -149,6 +152,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return safetyUser;
     }
 
+    private UserVO convertToUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
     /**
      * 根據標籤搜索使用者
      *
@@ -239,6 +251,72 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return userPage;
     }
+
+    @Override
+    public List<UserVO> getMatchUsers(long num, User loginUser) {
+        // 獲取所有具有標籤的使用者
+        List<User> allUsersWithTags = this.list(
+                new QueryWrapper<User>()
+                        .select("id", "tags")
+                        .isNotNull("tags")
+                        .apply("JSON_LENGTH(tags) > 0")
+        );
+
+        // 解析當前使用者的標籤
+        List<String> loginUserTags = parseTags(loginUser.getTags());
+        if (loginUserTags == null || loginUserTags.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 計算相似度
+        List<Pair<Long, User>> similarityList = allUsersWithTags.stream()
+                .filter(user -> isValidMatch(user, loginUser)) // 過濾掉無標籤或是自己
+                .map(user -> {
+                    List<String> userTags = parseTags(user.getTags());
+                    long distance = AlgorithmUtils.minDistance(loginUserTags, userTags);
+                    return new Pair<>(distance, user);
+                })
+                .sorted(Comparator.comparing(Pair::getKey)) // 根據相似度排序
+                .limit(num)
+                .collect(Collectors.toList());
+
+        // 獲取推薦使用者的 ID
+        List<Long> topUserIds = similarityList.stream()
+                .map(pair -> pair.getValue().getId())
+                .collect(Collectors.toList());
+
+        // 獲取安全的使用者資料
+        Map<Long, UserVO> safeUserMap = this.list(
+                        new QueryWrapper<User>().in("id", topUserIds)
+                ).stream()
+                .map(this::convertToUserVO)
+                .collect(Collectors.toMap(UserVO::getId, user -> user));
+
+        // 根據排序返回推薦使用者列表
+        return topUserIds.stream()
+                .map(safeUserMap::get)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 解析 JSON 格式的標籤
+     */
+    private List<String> parseTags(String tagsJson) {
+        if (StringUtils.isBlank(tagsJson)) {
+            return Collections.emptyList();
+        }
+        Gson gson = new Gson();
+        Type listType = new TypeToken<List<String>>() {}.getType();
+        return gson.fromJson(tagsJson, listType);
+    }
+
+    /**
+     * 判斷是否為有效的推薦匹配對象
+     */
+    private boolean isValidMatch(User user, User loginUser) {
+        return !StringUtils.isBlank(user.getTags()) && !user.getId().equals(loginUser.getId());
+    }
+
 
     /**
      * 使用者登出

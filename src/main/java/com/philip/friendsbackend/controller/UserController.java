@@ -8,6 +8,7 @@ import com.philip.friendsbackend.exception.BusinessException;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.request.UserLoginRequest;
 import com.philip.friendsbackend.model.request.UserRegisterRequest;
+import com.philip.friendsbackend.model.vo.UserVO;
 import com.philip.friendsbackend.service.UserService;
 import com.philip.friendsbackend.utils.ResultUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -128,5 +129,22 @@ public class UserController {
         }
         boolean result = userService.removeById(id);
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 尋找相似的使用者
+     *
+     * @param num
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<UserVO>> matchUsers(long num, HttpServletRequest request){
+        if (num <= 0 || num >20){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.getMatchUsers(num, loginUser));
+
     }
 }

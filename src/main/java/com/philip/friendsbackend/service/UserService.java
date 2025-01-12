@@ -3,6 +3,7 @@ package com.philip.friendsbackend.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.philip.friendsbackend.model.domain.User;
+import com.philip.friendsbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -66,4 +67,12 @@ public interface UserService extends IService<User> {
     User getLoginUser(HttpServletRequest request);
 
     Page<User> getRecommendUsers(long pageSize, long pageNum, HttpServletRequest request);
+
+    /**
+     * 尋找相似的使用者
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<UserVO> getMatchUsers(long num, User loginUser);
 }
