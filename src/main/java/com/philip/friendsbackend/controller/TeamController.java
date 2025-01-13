@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -80,11 +81,30 @@ public class TeamController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery){
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request){
         if (teamQuery == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery);
+        // 獲取隊伍的 ID 列表
+        List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        // 判斷當前使用者是否已加入隊伍
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        try {
+            // 如果使用者已登入，查詢其已加入的隊伍
+            User loginUser = userService.getLoginUser(request);
+            userTeamQueryWrapper.eq("user_id", loginUser.getId());
+            userTeamQueryWrapper.in("team_id", teamIdList);
+            // 獲取使用者已加入的隊伍關係數據
+            List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+            // 已加入的隊伍 ID 集合
+            Set<Long> hasJoinTeamSet = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+            // 標記每個隊伍是否已加入
+            teamList.forEach(team -> {
+                boolean hasJoin = hasJoinTeamSet.contains(team.getId());
+                team.setHasJoin(hasJoin);
+            });
+        }catch (Exception e){}
         return ResultUtils.success(teamList);
     }
 
