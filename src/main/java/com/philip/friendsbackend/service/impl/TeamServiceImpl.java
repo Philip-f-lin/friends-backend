@@ -251,15 +251,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 if (lock.tryLock(0, 30000L, TimeUnit.MILLISECONDS)) {
                     System.out.println("getLock: " + Thread.currentThread().getId());
                     QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
-                    userTeamQueryWrapper.eq("userId", userId);
+                    userTeamQueryWrapper.eq("user_id", userId);
                     long hasJoinNum = userTeamService.count(userTeamQueryWrapper);
                     if (hasJoinNum > 5) {
                         throw new BusinessException(ErrorCode.PARAMS_ERROR, "最多創建和加入 5 個隊伍");
                     }
                     // 不能重複加入已加入的隊伍
                     userTeamQueryWrapper = new QueryWrapper<>();
-                    userTeamQueryWrapper.eq("userId", userId);
-                    userTeamQueryWrapper.eq("teamId", teamId);
+                    userTeamQueryWrapper.eq("user_id", userId);
+                    userTeamQueryWrapper.eq("team_id", teamId);
                     long hasUserJoinTeam = userTeamService.count(userTeamQueryWrapper);
                     if (hasUserJoinTeam > 0) {
                         throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者已加入該隊伍");
@@ -320,7 +320,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 // 把隊伍移轉給最早加入的使用者
                 // 1. 查詢已加入隊伍的所有使用者和加入時間
                 QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
-                userTeamQueryWrapper.eq("teamId", teamId);
+                userTeamQueryWrapper.eq("team_id", teamId);
                 userTeamQueryWrapper.last("order by id asc limit 2");
                 List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
                 if (CollectionUtils.isEmpty(userTeamList) || userTeamList.size() <= 1) {
@@ -354,7 +354,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         // 刪除所有加入隊伍的相關訊息
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
-        userTeamQueryWrapper.eq("teamId", teamId);
+        userTeamQueryWrapper.eq("team_id", teamId);
         boolean result = userTeamService.remove(userTeamQueryWrapper);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "刪除隊伍相關訊息失敗");
@@ -387,7 +387,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      */
     private long getTeamUserByTeamId(long teamId) {
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
-        userTeamQueryWrapper.eq("teamId", teamId);
+        userTeamQueryWrapper.eq("team_id", teamId);
         return userTeamService.count(userTeamQueryWrapper);
     }
 }
