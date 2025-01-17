@@ -14,6 +14,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("Session ID: {}", request.getSession().getId());
         // 獲取使用者
         Object user = request.getSession().getAttribute(USER_LOGIN_STATE);
         // 判斷是使用者是否存在
@@ -23,14 +24,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             // 攔截
             return false;
         }
-        UserHolder.saveUser((User) user);
         // 有使用者，放行
         return true;
-    }
-
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        // 移除使用者
-        UserHolder.removeUser();
     }
 }
