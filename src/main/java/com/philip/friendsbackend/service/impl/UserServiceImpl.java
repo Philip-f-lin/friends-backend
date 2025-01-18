@@ -125,6 +125,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User safetyUser = getSafetyUser(user);
         // 記錄使用者登入狀態(session)
         request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
+        log.info("Session ID: {}", request.getSession().getId());
+        log.info("User: {}", request.getSession().getAttribute(USER_LOGIN_STATE));
         return safetyUser;
     }
 
