@@ -169,9 +169,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             Integer status = teamQuery.getStatus();
             TeamStatusEnum statusEnum = TeamStatusEnum.getEnumByValue(status);
             if (statusEnum == null) {
-                statusEnum = TeamStatusEnum.PUBLIC;
+                // 當查詢狀態為空時，預設查詢 PUBLIC 和 SECRET
+                queryWrapper.in("status", TeamStatusEnum.PUBLIC.getValue(), TeamStatusEnum.SECRET.getValue());
+            } else {
+                // 查詢指定狀態
+                queryWrapper.eq("status", statusEnum.getValue());
             }
-            queryWrapper.eq("status", statusEnum.getValue());
         }
         List<Team> teamList = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(teamList)) {
