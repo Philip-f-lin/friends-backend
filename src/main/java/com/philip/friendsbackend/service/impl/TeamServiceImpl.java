@@ -119,6 +119,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             } else {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "系統繁忙，請稍後重試");
             }
+        } catch (BusinessException businessException) {
+            throw businessException;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "獲取分布式鎖失敗");
         } finally {
@@ -284,8 +286,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw businessException;
         } catch (Exception e){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "獲取分布式鎖失敗");
-        }
-        finally {
+        } finally {
             // 確保只有當前線程持有鎖時才解鎖
             if (lock.isHeldByCurrentThread()) {
                 System.out.println("unlock: " + Thread.currentThread().getId());
@@ -388,6 +389,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     /**
      * 獲取隊伍的人數數量
+     *
      * @param teamId
      * @return
      */
