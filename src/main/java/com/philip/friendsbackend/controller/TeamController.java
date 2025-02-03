@@ -9,10 +9,7 @@ import com.philip.friendsbackend.model.domain.Team;
 import com.philip.friendsbackend.model.domain.User;
 import com.philip.friendsbackend.model.domain.UserTeam;
 import com.philip.friendsbackend.model.dto.TeamQuery;
-import com.philip.friendsbackend.model.request.TeamAddRequest;
-import com.philip.friendsbackend.model.request.TeamJoinRequest;
-import com.philip.friendsbackend.model.request.TeamQuitRequest;
-import com.philip.friendsbackend.model.request.TeamUpdateRequest;
+import com.philip.friendsbackend.model.request.*;
 import com.philip.friendsbackend.model.vo.TeamUserVO;
 import com.philip.friendsbackend.service.TeamService;
 import com.philip.friendsbackend.service.UserService;
@@ -23,10 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -105,6 +99,15 @@ public class TeamController {
                 team.setHasJoin(hasJoin);
             });
         }catch (Exception e){}
+        // 查詢已加入隊伍的人數
+        QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
+        userTeamJoinQueryWrapper.in("team_id", teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(userTeamJoinQueryWrapper);
+        Map<Long, List<UserTeam>> teamIdUserTeamList = userTeamList.stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
+        // 隊伍 ID，加入這個隊伍的使用者列表
+        teamList.forEach(team -> {
+            team.setHasJoinNum(teamIdUserTeamList.getOrDefault(team.getId(), new ArrayList<>()).size());
+        });
         return ResultUtils.success(teamList);
     }
 
@@ -142,14 +145,14 @@ public class TeamController {
     }
 
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(long id, HttpServletRequest request){
-        if (id <= 0){
+    public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDeleteRequest teamDeleteRequest, HttpServletRequest request){
+        if (teamDeleteRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        boolean result = teamService.deleteTeam(id, loginUser);
+        boolean result = teamService.deleteTeam(teamDeleteRequest.getTeamId(), loginUser);
         if (!result){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "刪除失敗");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "解散失敗");
         }
         return ResultUtils.success(true);
     }
