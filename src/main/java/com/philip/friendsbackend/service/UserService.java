@@ -15,12 +15,13 @@ public interface UserService extends IService<User> {
 
     /**
      * 使用者註冊
+     * @param userAccount 使用者名稱
      * @param userAccount 使用者帳號
      * @param userPassword 使用者密碼
      * @param checkPassword 檢驗密碼
      * @return 使用者 id
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(String username, String userAccount, String userPassword, String checkPassword);
 
     /**
      * 使用者登入
