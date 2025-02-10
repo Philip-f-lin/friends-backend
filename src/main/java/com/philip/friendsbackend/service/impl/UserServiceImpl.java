@@ -50,12 +50,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public static final String USER_LOGIN_STATE = "userLoginSate";
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String username, String userAccount, String userPassword, String checkPassword) {
         // 1. 檢驗輸入的帳號密碼
-        if(StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "輸入的帳號密碼為空白");
+        if(StringUtils.isAnyBlank(username, userAccount, userPassword, checkPassword)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        if(userAccount.length() < 8){
+        if(username.length() < 4){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者名稱需大於等於 4 位");
+        }
+        if(userAccount.length() < 4){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "使用者帳號需大於等於 8 位");
         }
         if(userPassword.length() < 8 || checkPassword.length() < 8){
@@ -69,7 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 密碼與驗證密碼不相同
         if(!userPassword.equals(checkPassword)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密碼與驗證密碼不相同");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密碼與確認密碼不相同");
         }
         // 帳號不能重複
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -82,8 +85,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String hashedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 3. 創建 user 物件，並存入數據
         User user = new User();
+        user.setUsername(username);
         user.setUserAccount(userAccount);
         user.setUserPassword(hashedPassword);
+        user.setAvatarUrl("http://img.shijue.me/4b301719f42b4f07b70ce5c89a23d645.jpg!dp6");
+        user.setTags("[\"Java\"]");
         boolean saveResult = this.save(user);
         if(!saveResult){
             throw new BusinessException(ErrorCode.SAVE_ERROR, "使用者資料保存時出現未知錯誤");
