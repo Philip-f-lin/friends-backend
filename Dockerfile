@@ -1,12 +1,10 @@
 # 使用 Java 8 的基礎映像
-FROM openjdk:8-jdk-alpine
+FROM maven:3.5-jdk-8-alpine as builder
 
-# 添加應用 jar 文件
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+# Copy local code to the container image.
+COPY friends-backend-0.0.1-SNAPSHOT.jar /friends-backend-0.0.1-SNAPSHOT.jar
 
-# 啟動 Spring Boot 應用
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-
-# 開放應用執行端口
 EXPOSE 8080
+
+# Run the web service on container startup.
+ENTRYPOINT ["java","-jar","/friends-backend-0.0.1-SNAPSHOT.jar","--spring.profiles.active=prod"]
