@@ -164,13 +164,30 @@ public class TeamController {
      * @return
      */
     @GetMapping("/list/my/create")
-    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery, HttpServletRequest request){
-        if(teamQuery == null){
+    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
         teamQuery.setUserId(loginUser.getId());
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery);
+        if (teamList.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 獲取隊伍 ID 列表
+        List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        // 查詢這些隊伍的加入人數
+        QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
+        userTeamJoinQueryWrapper.in("team_id", teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(userTeamJoinQueryWrapper);
+        // 統計每個隊伍的加入人數
+        Map<Long, Long> teamJoinCountMap = userTeamList.stream()
+                .collect(Collectors.groupingBy(UserTeam::getTeamId, Collectors.counting()));
+        // 設置 hasJoinNum，標記當前使用者為隊長（創建者）
+        teamList.forEach(team -> {
+            team.setHasJoinNum(teamJoinCountMap.getOrDefault(team.getId(), 0L).intValue());
+            team.setHasJoin(true); // 既然是創建的隊伍，肯定是加入狀態
+        });
         return ResultUtils.success(teamList);
     }
 
