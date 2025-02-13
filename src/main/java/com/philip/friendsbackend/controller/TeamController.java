@@ -202,15 +202,33 @@ public class TeamController {
         if(teamQuery == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 獲取當前登入用戶
         User loginUser = userService.getLoginUser(request);
+        // 查詢當前用戶加入的隊伍
         QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", loginUser.getId());
         List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
-        Map<Long, List<UserTeam>> listMap = userTeamList.stream()
-                .collect(Collectors.groupingBy(UserTeam::getTeamId));
-        List<Long> idList = new ArrayList<>(listMap.keySet());
-        teamQuery.setIdList(idList);
+        // 獲取當前用戶加入的隊伍 ID 列表
+        Set<Long> idSet = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        if (idSet.isEmpty()) {
+            return ResultUtils.success(Collections.emptyList());
+        }
+        // 設置查詢條件
+        teamQuery.setIdList(new ArrayList<>(idSet));
+        // 查詢隊伍列表
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery);
+        // 查詢已加入隊伍的人數
+        QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
+        userTeamJoinQueryWrapper.in("team_id", idSet);
+        List<UserTeam> allUserTeams = userTeamService.list(userTeamJoinQueryWrapper);
+        // 按隊伍 ID 分組計算人數
+        Map<Long, Long> teamJoinCountMap = allUserTeams.stream()
+                .collect(Collectors.groupingBy(UserTeam::getTeamId, Collectors.counting()));
+        // 設置 `hasJoin` 和 `hasJoinNum`
+        teamList.forEach(team -> {
+            team.setHasJoin(true); // 這個方法只查詢當前用戶已加入的隊伍，所以必然是 true
+            team.setHasJoinNum(teamJoinCountMap.getOrDefault(team.getId(), 0L).intValue());
+        });
         return ResultUtils.success(teamList);
     }
 }
