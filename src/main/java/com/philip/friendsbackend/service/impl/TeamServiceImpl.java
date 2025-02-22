@@ -180,7 +180,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         List<Team> teamList = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(teamList)) {
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "查無資料");
         }
         List<TeamUserVO> teamUserVOList = new ArrayList<>();
         // 關聯查詢創建者資訊
