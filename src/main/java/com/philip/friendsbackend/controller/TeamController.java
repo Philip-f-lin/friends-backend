@@ -37,6 +37,12 @@ public class TeamController {
     @Resource
     private UserTeamService userTeamService;
 
+    /**
+     * 創建隊伍
+     * @param teamAddRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/add")
     public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request){
         if (teamAddRequest == null){
@@ -49,6 +55,12 @@ public class TeamController {
         return ResultUtils.success(teamId);
     }
 
+    /**
+     * 更新隊伍資訊
+     * @param teamUpdateRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/update")
     public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request){
         if (teamUpdateRequest == null){
@@ -62,6 +74,11 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 根據 id 獲取隊伍資訊
+     * @param id
+     * @return
+     */
     @GetMapping("/get")
     public BaseResponse<Team> getTeamById(long id){
         if (id <= 0){
@@ -74,6 +91,12 @@ public class TeamController {
         return ResultUtils.success(team);
     }
 
+    /**
+     * 獲取隊伍列表資訊
+     * @param teamQuery
+     * @param request
+     * @return
+     */
     @GetMapping("/list")
     public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request){
         if (teamQuery == null){
@@ -111,6 +134,11 @@ public class TeamController {
         return ResultUtils.success(teamList);
     }
 
+    /**
+     * 獲取隊伍分頁查詢列表資訊
+     * @param teamQuery
+     * @return
+     */
     @GetMapping("/page")
     public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery){
         if (teamQuery == null){
@@ -124,6 +152,12 @@ public class TeamController {
         return ResultUtils.success(resultPage);
     }
 
+    /**
+     * 加入隊伍
+     * @param teamJoinRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/join")
     public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request){
         if (teamJoinRequest == null){
@@ -134,6 +168,12 @@ public class TeamController {
         return ResultUtils.success(result);
     }
 
+    /**
+     * 退出(解散)隊伍
+     * @param teamQuitRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/quit")
     public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest, HttpServletRequest request){
         if (teamQuitRequest == null){
@@ -144,7 +184,13 @@ public class TeamController {
         return ResultUtils.success(result);
     }
 
-    @PostMapping("/delete")
+    /**
+     * 解散隊伍
+     * @param teamDeleteRequest
+     * @param request
+     * @return
+     */
+    /*@PostMapping("/delete")
     public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDeleteRequest teamDeleteRequest, HttpServletRequest request){
         if (teamDeleteRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -155,7 +201,7 @@ public class TeamController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "解散失敗");
         }
         return ResultUtils.success(true);
-    }
+    }*/
 
     /**
      * 取得我創建的隊伍
